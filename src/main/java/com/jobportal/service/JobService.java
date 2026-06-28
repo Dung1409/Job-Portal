@@ -35,11 +35,13 @@ public class JobService {
     private final CategoryRepository categoryRepo;
     private final ApplicationRepository appRepo;
 
+    @Transactional(readOnly = true)
     public Page<JobResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return jobRepo.findByStatus(JobStatus.OPEN, pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public Page<JobResponse> search(String keyword, String location, Long categoryId,
                                      String jobType, String experience,
                                      Double salaryMin, Double salaryMax,
@@ -50,6 +52,7 @@ public class JobService {
                 .map(this::toResponse);
     }
 
+    @Transactional
     public JobResponse getById(Long id) {
         Job job = jobRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
@@ -58,6 +61,7 @@ public class JobService {
         return toResponse(job);
     }
 
+    @Transactional(readOnly = true)
     public Page<JobResponse> getMyJobs(User recruiter, int page, int size) {
         Company company = companyRepo.findByRecruiterId(recruiter.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("You need to create a company first"));
