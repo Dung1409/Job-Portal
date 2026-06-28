@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/pages/**").permitAll()
                 .requestMatchers("/api/v1/files/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/v1/jobs").hasAuthority("ROLE_RECRUITER")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/jobs/**").hasAuthority("ROLE_RECRUITER")
