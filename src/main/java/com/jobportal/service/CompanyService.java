@@ -23,16 +23,19 @@ public class CompanyService {
 
     private final CompanyRepository companyRepo;
 
+    @Transactional(readOnly = true)
     public List<CompanyResponse> getAll() {
         return companyRepo.findAll().stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
     public CompanyResponse getById(Long id) {
         Company company = companyRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
         return toResponse(company);
     }
 
+    @Transactional(readOnly = true)
     public CompanyResponse getMyCompany(User recruiter) {
         Company company = companyRepo.findByRecruiterId(recruiter.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("You haven't created a company yet"));

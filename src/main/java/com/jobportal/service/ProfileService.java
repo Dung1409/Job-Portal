@@ -19,6 +19,7 @@ public class ProfileService {
     private final ApplicantProfileRepository profileRepo;
     private final FileStorageService fileStorageService;
 
+    @Transactional(readOnly = true)
     public ApplicantProfile getProfile(Long userId) {
         return profileRepo.findByUserId(userId)
                 .orElse(null);

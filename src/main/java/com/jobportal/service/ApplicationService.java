@@ -36,15 +36,18 @@ public class ApplicationService {
         return appRepo.existsByJobIdAndApplicantId(jobId, userId);
     }
 
+    @Transactional(readOnly = true)
     public Page<ApplicationResponse> getMyApplications(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return appRepo.findByApplicantId(userId, pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public List<ApplicationResponse> getByJob(Long jobId) {
         return appRepo.findByJobId(jobId).stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
     public Page<ApplicationResponse> getByJob(Long jobId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return appRepo.findByJobId(jobId, pageable).map(this::toResponse);
@@ -106,6 +109,7 @@ public class ApplicationService {
         return toResponse(appRepo.save(app));
     }
 
+    @Transactional(readOnly = true)
     public ApplicationResponse getById(Long id) {
         Application app = appRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));

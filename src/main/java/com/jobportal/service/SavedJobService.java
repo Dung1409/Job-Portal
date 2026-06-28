@@ -27,12 +27,14 @@ public class SavedJobService {
     private final SavedJobRepository savedJobRepo;
     private final JobRepository jobRepo;
 
+    @Transactional(readOnly = true)
     public Page<JobResponse> getSavedJobs(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return savedJobRepo.findByUserId(userId, pageable)
                 .map(sj -> toJobResponse(sj.getJob()));
     }
 
+    @Transactional(readOnly = true)
     public List<Long> getSavedJobIds(Long userId) {
         return savedJobRepo.findByUserId(userId).stream()
                 .map(sj -> sj.getJob().getId())
