@@ -1,0 +1,45 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+*.class
+*.log
+*.gz
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Env
+.env
+.env.local
+*.env
+
+# Uploads (user-generated files)
+uploads/
+!uploads/.gitkeep
+
+# Docker
+docker-data/
+mysql_data/
+
+# Logs
+*.log
+app.log
+app.err
+
+# Temp
+tmp/
+*.tmp
