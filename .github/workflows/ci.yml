@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Railway
+      - name: List Railway services
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
@@ -88,4 +88,13 @@ jobs:
             echo "RAILWAY_TOKEN not set, skipping deploy"
             exit 0
           fi
-          npx @railway/cli up
+          npx @railway/cli service list
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            exit 0
+          fi
+          npx @railway/cli up --service "${{ vars.RAILWAY_SERVICE || 'job-portal' }}"
