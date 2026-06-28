@@ -81,7 +81,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Deploy to Railway
-        if: ${{ secrets.RAILWAY_TOKEN != '' }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: npx @railway/cli up
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "RAILWAY_TOKEN not set, skipping deploy"
+            exit 0
+          fi
+          npx @railway/cli up
