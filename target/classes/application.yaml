@@ -12,6 +12,7 @@ spring:
     password: jobpass123
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -27,6 +28,7 @@ spring:
   jackson:
     serialization:
       fail-on-empty-beans: false
+
 
 app:
   jwt:

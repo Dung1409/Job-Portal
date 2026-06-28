@@ -29,6 +29,7 @@ spring:
     serialization:
       fail-on-empty-beans: false
 
+
 app:
   jwt:
     secret: "bXktc2VjcmV0LWtleS1mb3Itam9iLXBvcnRhbC1wcm9qZWN0LTI1Ni1iaXQtbG9uZw=="
