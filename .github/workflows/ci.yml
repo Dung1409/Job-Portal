@@ -78,6 +78,10 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
-      - name: Trigger Railway Deploy
-        if: ${{ secrets.RAILWAY_DEPLOY_HOOK != '' }}
-        run: curl -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Railway
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: npx @railway/cli up
