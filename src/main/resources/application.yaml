@@ -12,7 +12,6 @@ spring:
     password: jobpass123
 
   jpa:
-    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: true
