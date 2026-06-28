@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Company - JobPortal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar"></nav>
+
+    <div class="container">
+        <div id="alert"></div>
+        <div class="form-card" style="max-width:600px">
+            <div id="company-info" class="hidden">
+                <div class="card">
+                    <div class="flex-between">
+                        <div>
+                            <h2 id="company-name" style="margin-bottom:0.3rem"></h2>
+                            <p id="company-website" style="font-size:0.88rem"></p>
+                        </div>
+                        <button onclick="showEdit()" class="btn btn-outline btn-sm">Edit</button>
+                    </div>
+                    <hr>
+                    <p id="company-desc" style="color:var(--text-secondary);line-height:1.7"></p>
+                </div>
+            </div>
+
+            <div id="edit-section" class="hidden">
+                <div class="card">
+                    <h2 class="mb-2">Edit Company</h2>
+                    <form id="edit-form">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="edit-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="edit-desc"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Website</label>
+                            <input type="url" id="edit-website" placeholder="https://example.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+                        <button type="button" onclick="loadCompany()" class="btn btn-outline btn-block mt-1">Cancel</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="create-section" class="hidden">
+                <div class="card">
+                    <h2 class="mb-2">Create Your Company</h2>
+                    <form id="create-form">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="create-name" placeholder="e.g. Acme Inc." required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="create-desc" placeholder="Tell candidates about your company..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Website</label>
+                            <input type="url" id="create-website" placeholder="https://example.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-lg">Create Company</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            window.location.href = '/login.html';
+        }
+
+        let currentCompany = null;
+
+        async function loadCompany() {
+            hideAll();
+            try {
+                const company = await apiFetch('/companies/me');
+                currentCompany = company;
+                document.getElementById('company-name').textContent = company.name;
+                document.getElementById('company-desc').textContent = company.description || 'No description';
+                const ws = document.getElementById('company-website');
+                ws.innerHTML = company.website ? '<a href="' + company.website + '" target="_blank">' + company.website + '</a>' : '';
+                document.getElementById('company-info').classList.remove('hidden');
+            } catch (e) {
+                document.getElementById('create-section').classList.remove('hidden');
+            }
+        }
+
+        function showEdit() {
+            hideAll();
+            document.getElementById('edit-name').value = currentCompany.name;
+            document.getElementById('edit-desc').value = currentCompany.description || '';
+            document.getElementById('edit-website').value = currentCompany.website || '';
+            document.getElementById('edit-section').classList.remove('hidden');
+        }
+
+        function hideAll() {
+            document.getElementById('company-info').classList.add('hidden');
+            document.getElementById('edit-section').classList.add('hidden');
+            document.getElementById('create-section').classList.add('hidden');
+        }
+
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            try {
+                await apiFetch('/companies', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: document.getElementById('create-name').value,
+                        description: document.getElementById('create-desc').value,
+                        website: document.getElementById('create-website').value
+                    })
+                });
+                showAlert('Company created!', 'success');
+                loadCompany();
+            } catch (e) {
+                showAlert(e.message);
+            }
+        });
+
+        document.getElementById('edit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            try {
+                await apiFetch('/companies/' + currentCompany.id, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        name: document.getElementById('edit-name').value,
+                        description: document.getElementById('edit-desc').value,
+                        website: document.getElementById('edit-website').value
+                    })
+                });
+                showAlert('Company updated!', 'success');
+                loadCompany();
+            } catch (e) {
+                showAlert(e.message);
+            }
+        });
+
+        loadCompany();
+    </script>
+</body>
+</html>

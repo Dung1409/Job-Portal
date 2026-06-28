@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Applications - JobPortal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar"></nav>
+
+    <div class="container">
+        <a href="/my-jobs.html" class="back-link">&larr; Back to My Jobs</a>
+        <h2 class="page-title" id="page-title">Applications</h2>
+        <div id="alert"></div>
+        <div id="apps-list"></div>
+        <div id="pagination" class="mt-3"></div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            window.location.href = '/login.html';
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const jobId = params.get('jobId');
+        let currentPage = 0;
+        let totalPages = 0;
+        const PAGE_SIZE = 10;
+
+        if (!jobId) {
+            document.getElementById('apps-list').innerHTML = '<div class="card"><p>No job selected.</p></div>';
+        } else {
+            loadApplications();
+        }
+
+        async function loadApplications() {
+            try {
+                const res = await apiFetch('/applications/job/' + jobId + '?page=' + currentPage + '&size=' + PAGE_SIZE);
+                totalPages = res.totalPages;
+                const apps = res.content;
+                const list = document.getElementById('apps-list');
+
+                if (apps.length === 0) {
+                    list.innerHTML = '<div class="card"><p>No applications for this job yet.</p></div>';
+                    renderPagination();
+                    return;
+                }
+
+                document.getElementById('page-title').textContent = 'Applications (' + res.totalElements + ')';
+
+                list.innerHTML = apps.map(app => `
+                    <div class="card" id="app-${app.id}">
+                        <div class="flex-between" style="align-items:flex-start">
+                            <div>
+                                <h3 style="margin-bottom:0.2rem">${app.applicantName || 'Unknown'}</h3>
+                                <div class="meta">${app.applicantEmail || ''}</div>
+                                <div class="meta">Applied: ${new Date(app.appliedAt).toLocaleDateString()}</div>
+                                ${app.coverLetter ? '<hr><p style="font-size:0.88rem;color:var(--text-secondary)">' + app.coverLetter + '</p>' : ''}
+                                ${app.resumeUrl ? '<div class="mt-1"><a href="/api/v1/files/resume/' + app.id + '" target="_blank" class="btn btn-sm btn-outline">View Resume</a></div>' : ''}
+                            </div>
+                            <div class="flex-col" style="align-items:flex-end">
+                                <span class="badge badge-${app.status.toLowerCase()}">${app.status}</span>
+                                <select class="status-select" data-app-id="${app.id}" onchange="updateStatus(${app.id}, this.value)">
+                                    <option value="APPLIED" ${app.status === 'APPLIED' ? 'selected' : ''}>APPLIED</option>
+                                    <option value="REVIEWING" ${app.status === 'REVIEWING' ? 'selected' : ''}>REVIEWING</option>
+                                    <option value="INTERVIEWED" ${app.status === 'INTERVIEWED' ? 'selected' : ''}>INTERVIEWED</option>
+                                    <option value="OFFERED" ${app.status === 'OFFERED' ? 'selected' : ''}>OFFERED</option>
+                                    <option value="REJECTED" ${app.status === 'REJECTED' ? 'selected' : ''}>REJECTED</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                renderPagination();
+            } catch (e) {
+                showAlert(e.message);
+            }
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = '<div class="pagination">';
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage === 0 ? 'disabled' : '') + '>Previous</button>';
+            for (let i = 0; i < totalPages; i++) {
+                html += '<button class="btn btn-sm ' + (i === currentPage ? 'btn-primary' : 'btn-outline') + '" onclick="goToPage(' + i + ')">' + (i + 1) + '</button>';
+            }
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages - 1 ? 'disabled' : '') + '>Next</button>';
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            if (page < 0 || page >= totalPages) return;
+            currentPage = page;
+            loadApplications();
+        }
+
+        async function updateStatus(appId, newStatus) {
+            try {
+                await apiFetch('/applications/' + appId + '/status', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const badge = document.querySelector('#app-' + appId + ' .badge');
+                badge.className = 'badge badge-' + newStatus.toLowerCase();
+                badge.textContent = newStatus;
+                showAlert('Status updated to ' + newStatus, 'success');
+            } catch (e) {
+                showAlert(e.message);
+            }
+        }
+    </script>
+</body>
+</html>
