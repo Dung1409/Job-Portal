@@ -63,7 +63,7 @@
     <script>
         async function loadCompany() {
             try {
-                const company = await apiFetch('/companies/my');
+                const company = await apiFetch('/companies/me');
                 if (company) {
                     document.getElementById('companyId').value = company.id;
                     document.getElementById('name').value = company.name || '';
