@@ -48,9 +48,7 @@
                 localStorage.setItem('user', JSON.stringify(data.user));
                 showToast('Welcome back!', 'success');
                 const role = data.user.role;
-                if (role === 'RECRUITER') setTimeout(() => window.location.href = '/my-jobs.html', 500);
-                else if (role === 'ADMIN') setTimeout(() => window.location.href = '/index.html', 500);
-                else setTimeout(() => window.location.href = '/index.html', 500);
+                setTimeout(() => window.location.href = '/index.html', 500);
             } catch (e) {
                 showAlert(e.message);
             }

@@ -10,7 +10,7 @@
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <a href="/my-jobs.html" class="back-link">← Back to My Jobs</a>
+        <a href="/index.html" class="back-link">← Back to Jobs</a>
         <div id="alert"></div>
         <div class="card" style="max-width:720px">
             <h2 class="mb-2">📌 Post a New Job</h2>
@@ -125,7 +125,7 @@
             try {
                 await apiPost('/jobs', data);
                 showToast('Job posted successfully!', 'success');
-                setTimeout(() => window.location.href = '/my-jobs.html', 1000);
+                setTimeout(() => window.location.href = '/index.html', 1000);
             } catch (e) { showAlert(e.message); }
         });
 

@@ -128,9 +128,8 @@ function showNavbar() {
             <a href="/index.html" class="logo">JobPortal</a>
             <button class="nav-toggle" onclick="toggleNav()">☰</button>
             <div class="nav-links" id="nav-links">
-                <a href="/index.html" onclick="closeNav()">Jobs</a>
-                <a href="/messages.html" onclick="closeNav()">Messages<span class="unread-badge" id="unread-badge"></span></a>
-                ${isRecruiter ? '<a href="/my-jobs.html" onclick="closeNav()">My Jobs</a><a href="/post-job.html" onclick="closeNav()">Post Job</a><a href="/my-company.html" onclick="closeNav()">Company</a>' : ''}
+                <a href="/messages.html" onclick="closeNav()">Messages</a>
+                ${isRecruiter ? '<a href="/post-job.html" onclick="closeNav()">Post Job</a><a href="/my-company.html" onclick="closeNav()">Company</a>' : '<a href="/index.html" onclick="closeNav()">Jobs</a>'}
                 ${isApplicant ? '<a href="/my-cvs.html" onclick="closeNav()">My CVs</a><a href="/my-applications.html" onclick="closeNav()">Applications</a>' : ''}
                 <span class="nav-user">${user.fullName || user.fullname || user.email}</span>
                 <a class="nav-logout" onclick="logout()">Logout</a>

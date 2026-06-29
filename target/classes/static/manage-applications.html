@@ -10,7 +10,7 @@
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <a href="/my-jobs.html" class="back-link">← Back to My Jobs</a>
+        <a href="/post-job.html" class="back-link">← Back to Post Job</a>
         <div id="alert"></div>
 
         <div id="header-section">
@@ -31,7 +31,7 @@
 
         async function loadApplications() {
             if (!jobId) {
-                document.getElementById('applications-list').innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No job selected</h3><p>Please select a job to manage applications.</p><a href="/my-jobs.html" class="btn btn-primary mt-2">Go to My Jobs</a></div>';
+                document.getElementById('applications-list').innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No job selected</h3><p>Please select a job to manage applications.</p><a href="/index.html" class="btn btn-primary mt-2">Browse Jobs</a></div>';
                 return;
             }
 
@@ -77,7 +77,7 @@
                             </select>
                         </div>
                         ${app.coverLetter ? '<hr class="section-divider"><p style="font-size:0.88rem;color:var(--text-secondary);white-space:pre-wrap"><em>' + app.coverLetter + '</em></p>' : ''}
-                        ${app.resumeUrl ? '<hr class="section-divider"><a href="/api/v1/files/cv/' + app.applicantId + '" class="btn btn-outline btn-sm" target="_blank">📄 View Resume</a>' : ''}
+                        ${app.resumeUrl ? '<hr class="section-divider"><a href="/api/v1/files/resume/' + app.id + '" class="btn btn-outline btn-sm" target="_blank">📄 View Resume</a>' : ''}
                         ${!app.resumeUrl ? '<hr class="section-divider">' : ''}
                         <a href="/conversation.html?userId=${app.applicantId}" class="btn btn-outline btn-sm">💬 Message</a>
                     </div>`;
