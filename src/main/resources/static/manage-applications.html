@@ -10,7 +10,7 @@
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <a href="/post-job.html" class="back-link">← Back to Post Job</a>
+        <a href="/my-jobs.html" class="back-link">← Back to My Jobs</a>
         <div id="alert"></div>
 
         <div id="header-section">
@@ -31,7 +31,7 @@
 
         async function loadApplications() {
             if (!jobId) {
-                document.getElementById('applications-list').innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No job selected</h3><p>Please select a job to manage applications.</p><a href="/index.html" class="btn btn-primary mt-2">Browse Jobs</a></div>';
+                document.getElementById('applications-list').innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No job selected</h3><p>Please select a job to manage applications.</p><a href="/my-jobs.html" class="btn btn-primary mt-2">Go to My Jobs</a></div>';
                 return;
             }
 
