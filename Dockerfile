@@ -7,6 +7,8 @@ RUN mvn package -DskipTests -B
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+RUN mkdir -p /data/uploads
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
+VOLUME /data/uploads
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]

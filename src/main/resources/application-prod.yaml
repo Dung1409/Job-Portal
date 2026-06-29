@@ -38,7 +38,7 @@ app:
     refresh-token-expiry-days: ${APP_JWT_REFRESH_TOKEN_EXPIRY_DAYS:7}
 
   upload:
-    dir: ${APP_UPLOAD_DIR:./uploads}
+    dir: ${APP_UPLOAD_DIR:/data/uploads}
     max-file-size: 5MB
     allowed-types: application/pdf,image/jpeg,image/png
 
