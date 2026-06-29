@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.jobportal.entity.Job;
+import com.jobportal.enums.ExperienceLevel;
 import com.jobportal.enums.JobStatus;
+import com.jobportal.enums.JobType;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
     Page<Job> findByCompanyId(Long companyId, Pageable pageable);
@@ -28,8 +30,8 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     Page<Job> searchJobs(@Param("keyword") String keyword,
                          @Param("location") String location,
                          @Param("categoryId") Long categoryId,
-                         @Param("jobType") String jobType,
-                         @Param("experience") String experience,
+                          @Param("jobType") JobType jobType,
+                          @Param("experience") ExperienceLevel experience,
                          @Param("salaryMin") Double salaryMin,
                          @Param("salaryMax") Double salaryMax,
                          Pageable pageable);

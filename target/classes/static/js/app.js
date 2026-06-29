@@ -27,16 +27,19 @@ function logout() {
 
 function authHeaders() {
     const t = getToken();
-    return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' }
-             : { 'Content-Type': 'application/json' };
+    const h = {};
+    if (t) h['Authorization'] = 'Bearer ' + t;
+    return h;
 }
 
 async function apiFetch(url, opts = {}) {
-    opts.headers = { ...authHeaders(), ...opts.headers };
+    opts.headers = { 'Content-Type': 'application/json', ...authHeaders(), ...opts.headers };
     const res = await fetch(API + url, opts);
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.message || err.error || 'Request failed');
+        let msg;
+        try { const e = await res.json(); msg = e.message || e.error || 'Request failed'; }
+        catch { msg = res.statusText; }
+        throw new Error(msg);
     }
     const text = await res.text();
     if (!text) return null;
@@ -45,12 +48,13 @@ async function apiFetch(url, opts = {}) {
 }
 
 async function apiUpload(url, formData) {
-    const t = getToken();
-    const headers = t ? { 'Authorization': 'Bearer ' + t } : {};
-    const res = await fetch(API + url, { method: 'POST', headers, body: formData });
+    const h = authHeaders();
+    const res = await fetch(API + url, { method: 'POST', headers: h, body: formData });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.message || err.error || 'Upload failed');
+        let msg;
+        try { const e = await res.json(); msg = e.message || e.error || 'Upload failed'; }
+        catch { msg = res.statusText; }
+        throw new Error(msg);
     }
     const text = await res.text();
     if (!text) return null;
@@ -74,12 +78,45 @@ async function apiDelete(url) {
     return apiFetch(url, { method: 'DELETE' });
 }
 
-function showAlert(msg, type = 'error') {
-    const el = document.getElementById('alert');
-    if (!el) return;
-    el.innerHTML = '<div class="alert alert-' + type + '">' + msg + '</div>';
+/* ── Toast notifications ── */
+function showToast(msg, type = 'error') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => el.remove(), 300);
+    }, 4000);
 }
 
+/* ── Alert (backward compat) ── */
+function showAlert(msg, type = 'error') {
+    showToast(msg, type);
+    const el = document.getElementById('alert');
+    if (el) {
+        el.innerHTML = '<div class="alert alert-' + type + '">' + msg + '</div>';
+    }
+}
+
+/* ── Skeleton loading ── */
+function showSkeleton(containerId, count = 3) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+        el.innerHTML += '<div class="skeleton skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>';
+    }
+}
+
+/* ── Navbar ── */
 function showNavbar() {
     const nav = document.getElementById('navbar');
     if (!nav) return;
@@ -89,22 +126,51 @@ function showNavbar() {
         const isApplicant = hasRole('APPLICANT');
         nav.innerHTML = `
             <a href="/index.html" class="logo">JobPortal</a>
-            <div class="nav-links">
-                <a href="/index.html">Jobs</a>
-                ${isRecruiter ? '<a href="/my-jobs.html">My Jobs</a><a href="/post-job.html">Post Job</a><a href="/my-company.html">My Company</a>' : ''}
-                ${isApplicant ? '<a href="/my-cvs.html">My CVs</a><a href="/my-applications.html">My Applications</a>' : ''}
-                <span>Hi, ${user.fullName || user.fullname}</span>
-                <a onclick="logout()">Logout</a>
+            <button class="nav-toggle" onclick="toggleNav()">☰</button>
+            <div class="nav-links" id="nav-links">
+                <a href="/index.html" onclick="closeNav()">Jobs</a>
+                ${isRecruiter ? '<a href="/my-jobs.html" onclick="closeNav()">My Jobs</a><a href="/post-job.html" onclick="closeNav()">Post Job</a><a href="/my-company.html" onclick="closeNav()">Company</a>' : ''}
+                ${isApplicant ? '<a href="/my-cvs.html" onclick="closeNav()">My CVs</a><a href="/my-applications.html" onclick="closeNav()">Applications</a>' : ''}
+                <span class="nav-user">${user.fullName || user.fullname || user.email}</span>
+                <a class="nav-logout" onclick="logout()">Logout</a>
             </div>`;
     } else {
         nav.innerHTML = `
             <a href="/index.html" class="logo">JobPortal</a>
-            <div class="nav-links">
-                <a href="/index.html">Jobs</a>
-                <a href="/login.html">Login</a>
-                <a href="/register.html">Register</a>
+            <button class="nav-toggle" onclick="toggleNav()">☰</button>
+            <div class="nav-links" id="nav-links">
+                <a href="/index.html" onclick="closeNav()">Jobs</a>
+                <a href="/login.html" onclick="closeNav()">Login</a>
+                <a href="/register.html" onclick="closeNav()">Register</a>
             </div>`;
     }
+}
+
+function toggleNav() {
+    document.getElementById('nav-links')?.classList.toggle('open');
+}
+
+function closeNav() {
+    document.getElementById('nav-links')?.classList.remove('open');
+}
+
+/* ── Format salary ── */
+function formatSalary(min, max, currency) {
+    const fmt = (v) => {
+        if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
+        if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+        return v;
+    };
+    const sym = currency === 'USD' ? '$' : (currency === 'VND' ? '₫' : '');
+    if (max && max !== min) return sym + fmt(min) + ' - ' + sym + fmt(max);
+    return sym + fmt(min);
+}
+
+/* ── Format date ── */
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 document.addEventListener('DOMContentLoaded', showNavbar);

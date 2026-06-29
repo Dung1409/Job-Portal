@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Detail - JobPortal</title>
+    <title>Job Detail — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <a href="/index.html" class="back-link">&larr; Back to Jobs</a>
+        <a href="/index.html" class="back-link">← Back to Jobs</a>
         <div id="alert"></div>
         <div id="job-detail"></div>
     </div>
@@ -29,48 +29,59 @@
                 const salary = job.salaryMin && job.salaryMax
                     ? sym + ' ' + Number(job.salaryMin).toLocaleString() + ' - ' + sym + ' ' + Number(job.salaryMax).toLocaleString()
                     : (job.salaryMin ? sym + ' ' + Number(job.salaryMin).toLocaleString() : '');
+
                 document.getElementById('job-detail').innerHTML = `
                     <div class="card">
-                        <h2>${job.title}</h2>
-                        <div class="job-info mt-1 mb-2">
-                            ${job.companyName ? '<span class="company-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>' + job.companyName + '</span>' : ''}
-                            ${job.location ? '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + job.location + '</span>' : ''}
-                            ${salary ? '<span class="salary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + salary + '</span>' : ''}
-                            ${job.jobType ? '<span>' + job.jobType.replace('_', ' ') + '</span>' : ''}
+                        <div class="flex-between" style="margin-bottom:1rem">
+                            <div>
+                                <h2>${job.title}</h2>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.4rem 1rem;margin-top:0.5rem">
+                                    ${job.companyName ? '<span style="font-size:0.88rem;color:var(--text-secondary)">📋 ' + job.companyName + '</span>' : ''}
+                                    ${job.location ? '<span style="font-size:0.88rem;color:var(--text-secondary)">📍 ' + job.location + '</span>' : ''}
+                                    ${salary ? '<span style="font-size:0.88rem;font-weight:600;color:var(--success)">💰 ' + salary + '</span>' : ''}
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem">
+                                    ${job.jobType ? '<span class="badge badge-primary">' + job.jobType.replace(/_/g, ' ') + '</span>' : ''}
+                                    ${job.experience ? '<span class="badge badge-info">' + job.experience.replace(/_/g, ' ') + '</span>' : ''}
+                                    ${job.status ? '<span class="badge badge-success">' + job.status + '</span>' : ''}
+                                    ${job.categoryName ? '<span class="badge badge-warning">' + job.categoryName + '</span>' : ''}
+                                </div>
+                            </div>
                         </div>
-                        ${job.description ? '<p>' + job.description + '</p>' : ''}
-                        ${job.requirements ? '<hr><h4>Requirements</h4><p style="white-space:pre-wrap">' + job.requirements + '</p>' : ''}
-                        ${job.benefits ? '<hr><h4>Benefits</h4><p style="white-space:pre-wrap">' + job.benefits + '</p>' : ''}
+                        ${job.description ? '<hr class="section-divider"><h4>📄 Description</h4><p>' + job.description + '</p>' : ''}
+                        ${job.requirements ? '<hr class="section-divider"><h4>📋 Requirements</h4><p style="white-space:pre-wrap">' + job.requirements + '</p>' : ''}
+                        ${job.benefits ? '<hr class="section-divider"><h4>🎁 Benefits</h4><p style="white-space:pre-wrap">' + job.benefits + '</p>' : ''}
                         ${user && user.role === 'APPLICANT' ? `
-                            <hr>
+                            <hr class="section-divider">
                             <div id="apply-section">
-                                <h4 style="margin-bottom:1rem">Apply for this job</h4>
+                                <h4>🚀 Apply for this job</h4>
                                 <form id="apply-form" enctype="multipart/form-data">
                                     <div class="form-group">
                                         <label>Cover Letter (optional)</label>
-                                        <textarea id="coverLetter" rows="5" placeholder="Tell the employer why you're a good fit..."></textarea>
+                                        <textarea id="coverLetter" rows="5" placeholder="Tell the employer why you're a good fit and what makes you unique..."></textarea>
                                     </div>
                                     <div class="form-group">
                                         <label>Resume / CV</label>
-                                        <div style="display:flex;gap:1rem;margin-bottom:8px">
+                                        <div class="radio-group">
                                             <label><input type="radio" name="cvChoice" value="upload" checked onchange="toggleCvInput()"> Upload new</label>
                                             <label><input type="radio" name="cvChoice" value="existing" onchange="toggleCvInput()"> Choose existing</label>
                                         </div>
                                         <div id="cv-upload-section">
                                             <input type="file" id="resumeFile" accept=".pdf,.doc,.docx,application/pdf">
-                                            <small class="text-muted">Upload your CV (PDF, max 10MB)</small>
+                                            <span class="field-hint">Upload your CV (PDF, max 10MB)</span>
                                         </div>
                                         <div id="cv-existing-section" style="display:none">
                                             <select id="existingCv">
                                                 <option value="">-- Select a CV --</option>
                                             </select>
-                                            <small class="text-muted">Choose from your uploaded CVs</small>
+                                            <span class="field-hint">Choose from your uploaded CVs</span>
                                         </div>
                                     </div>
                                     <button type="submit" class="btn btn-success btn-lg">Submit Application</button>
                                 </form>
                             </div>
                         ` : ''}
+                        ${!user ? '<hr class="section-divider"><div class="empty-state" style="padding:1.5rem"><p><a href="/login.html">Sign in</a> to apply for this job.</p></div>' : ''}
                     </div>
                 `;
 
@@ -78,54 +89,41 @@
                     try {
                         const alreadyApplied = await apiFetch('/applications/check/' + job.id);
                         if (alreadyApplied) {
-                            document.getElementById('apply-section').innerHTML = '<div class="alert alert-success mt-2">You have already applied to this job.</div>';
+                            document.getElementById('apply-section').innerHTML = '<div class="alert alert-success" style="margin-bottom:0">✅ You have already applied for this job.</div>';
                             return;
                         }
-                    } catch (e) { /* ignore */ }
-
-                    window.toggleCvInput = function() {
-                        const choice = document.querySelector('input[name="cvChoice"]:checked').value;
-                        document.getElementById('cv-upload-section').style.display = choice === 'upload' ? '' : 'none';
-                        document.getElementById('cv-existing-section').style.display = choice === 'existing' ? '' : 'none';
-                        if (choice === 'existing') loadExistingCvs();
-                    };
-
-                    async function loadExistingCvs() {
-                        try {
-                            const cvs = await apiFetch('/cvs');
-                            const select = document.getElementById('existingCv');
-                            select.innerHTML = '<option value="">-- Select a CV --</option>';
-                            if (cvs && cvs.length) {
-                                cvs.forEach(cv => {
-                                    const opt = document.createElement('option');
-                                    opt.value = cv.id;
-                                    opt.textContent = cv.originalFilename + ' (' + (cv.fileSize ? (cv.fileSize / 1024).toFixed(1) + ' KB' : '') + ')';
-                                    select.appendChild(opt);
-                                });
-                            } else {
-                                select.innerHTML = '<option value="">No CVs uploaded yet</option>';
-                            }
-                        } catch (e) { /* ignore */ }
-                    }
-
-                    const form = document.getElementById('apply-form');
-                    form.addEventListener('submit', async function(e) {
+                    } catch {}
+                    try {
+                        const cvs = await apiFetch('/cvs');
+                        const sel = document.getElementById('existingCv');
+                        if (cvs && cvs.length) {
+                            cvs.forEach(cv => {
+                                const opt = document.createElement('option');
+                                opt.value = cv.id;
+                                opt.textContent = cv.originalFilename + ' (' + formatDate(cv.uploadedAt) + ')';
+                                sel.appendChild(opt);
+                            });
+                        }
+                    } catch {}
+                    document.getElementById('apply-form').addEventListener('submit', async function(e) {
                         e.preventDefault();
+                        const fd = new FormData();
+                        fd.append('jobId', job.id);
+                        fd.append('coverLetter', document.getElementById('coverLetter').value);
+                        const choice = document.querySelector('input[name="cvChoice"]:checked').value;
+                        if (choice === 'upload') {
+                            const file = document.getElementById('resumeFile').files[0];
+                            if (!file) return showAlert('Please select a file to upload');
+                            fd.append('resume', file);
+                        } else {
+                            const cvId = document.getElementById('existingCv').value;
+                            if (!cvId) return showAlert('Please select a CV');
+                            fd.append('cvId', cvId);
+                        }
                         try {
-                            const choice = document.querySelector('input[name="cvChoice"]:checked').value;
-                            const formData = new FormData();
-                            formData.append('jobId', job.id);
-                            formData.append('coverLetter', document.getElementById('coverLetter').value);
-                            if (choice === 'upload') {
-                                const resumeFile = document.getElementById('resumeFile').files[0];
-                                if (resumeFile) formData.append('resume', resumeFile);
-                            } else {
-                                const cvId = document.getElementById('existingCv').value;
-                                if (cvId) formData.append('cvId', cvId);
-                            }
-                            await apiUpload('/applications', formData);
-                            showAlert('Application submitted!', 'success');
-                            document.getElementById('apply-section').innerHTML = '<div class="alert alert-success mt-2">You have applied successfully.</div>';
+                            await apiUpload('/applications', fd);
+                            showToast('Application submitted successfully!', 'success');
+                            document.getElementById('apply-section').innerHTML = '<div class="alert alert-success" style="margin-bottom:0">✅ Your application has been submitted successfully!</div>';
                         } catch (e) {
                             showAlert(e.message);
                         }
@@ -133,8 +131,16 @@
                 }
             } catch (e) {
                 showAlert(e.message);
+                document.getElementById('job-detail').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Failed to load job</h3><p>' + e.message + '</p></div>';
             }
         }
+
+        function toggleCvInput() {
+            const choice = document.querySelector('input[name="cvChoice"]:checked').value;
+            document.getElementById('cv-upload-section').style.display = choice === 'upload' ? 'block' : 'none';
+            document.getElementById('cv-existing-section').style.display = choice === 'existing' ? 'block' : 'none';
+        }
+
         loadJob();
     </script>
 </body>

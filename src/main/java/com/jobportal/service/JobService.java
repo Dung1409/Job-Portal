@@ -15,7 +15,9 @@ import com.jobportal.entity.Category;
 import com.jobportal.entity.Company;
 import com.jobportal.entity.Job;
 import com.jobportal.entity.User;
+import com.jobportal.enums.ExperienceLevel;
 import com.jobportal.enums.JobStatus;
+import com.jobportal.enums.JobType;
 import com.jobportal.enums.Role;
 import com.jobportal.exception.ResourceNotFoundException;
 import com.jobportal.exception.UnauthorizedException;
@@ -43,7 +45,7 @@ public class JobService {
 
     @Transactional(readOnly = true)
     public Page<JobResponse> search(String keyword, String location, Long categoryId,
-                                     String jobType, String experience,
+                                     JobType jobType, ExperienceLevel experience,
                                      Double salaryMin, Double salaryMax,
                                      int page, int size) {
         Pageable pageable = PageRequest.of(page, size);

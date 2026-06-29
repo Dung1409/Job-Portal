@@ -3,33 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - JobPortal</title>
+    <title>Sign In — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
-    <div class="container">
+    <div class="container-narrow">
+        <div id="alert"></div>
         <div class="form-card">
-            <div class="card">
-                <h2 class="text-center mb-2">Welcome Back</h2>
-                <p class="text-center mb-2" style="color:var(--text-secondary);font-size:0.9rem">Sign in to your account</p>
-                <div id="alert"></div>
-                <form id="login-form">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" placeholder="your@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="password" placeholder="Enter your password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
-                    <p class="text-center mt-2" style="font-size:0.88rem;color:var(--text-secondary)">
-                        Don't have an account? <a href="/register.html">Create one</a>
-                    </p>
-                </form>
-            </div>
+            <h2>Welcome Back</h2>
+            <p class="form-subtitle">Sign in to your account to continue</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
+                <p class="text-center mt-2" style="font-size:0.85rem;color:var(--text-secondary)">
+                    Don't have an account? <a href="/register.html">Create one</a>
+                </p>
+            </form>
         </div>
     </div>
 
@@ -48,10 +46,11 @@
                 localStorage.setItem('token', data.accessToken);
                 localStorage.setItem('refreshToken', data.refreshToken);
                 localStorage.setItem('user', JSON.stringify(data.user));
+                showToast('Welcome back!', 'success');
                 const role = data.user.role;
-                if (role === 'RECRUITER') window.location.href = '/my-jobs.html';
-                else if (role === 'ADMIN') window.location.href = '/index.html';
-                else window.location.href = '/index.html';
+                if (role === 'RECRUITER') setTimeout(() => window.location.href = '/my-jobs.html', 500);
+                else if (role === 'ADMIN') setTimeout(() => window.location.href = '/index.html', 500);
+                else setTimeout(() => window.location.href = '/index.html', 500);
             } catch (e) {
                 showAlert(e.message);
             }

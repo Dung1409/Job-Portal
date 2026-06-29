@@ -20,7 +20,9 @@ import com.jobportal.dto.response.ApiResponse;
 import com.jobportal.dto.response.JobResponse;
 import com.jobportal.dto.response.PageResponse;
 import com.jobportal.entity.User;
+import com.jobportal.enums.ExperienceLevel;
 import com.jobportal.enums.JobStatus;
+import com.jobportal.enums.JobType;
 import com.jobportal.service.JobService;
 
 import jakarta.validation.Valid;
@@ -39,8 +41,8 @@ public class JobController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String jobType,
-            @RequestParam(required = false) String experience,
+            @RequestParam(required = false) JobType jobType,
+            @RequestParam(required = false) ExperienceLevel experience,
             @RequestParam(required = false) Double salaryMin,
             @RequestParam(required = false) Double salaryMax) {
 

@@ -3,69 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Applications - JobPortal</title>
+    <title>My Applications — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <h2 class="mb-2">My Applications</h2>
         <div id="alert"></div>
-        <div id="apps-list"></div>
+        <h2 class="page-title">📝 My Applications</h2>
+        <div id="applications-list"></div>
         <div id="pagination" class="mt-3"></div>
     </div>
 
     <script src="/js/app.js"></script>
     <script>
-        if (!isLoggedIn()) {
-            window.location.href = '/login.html';
-        }
-
         let currentPage = 0;
         let totalPages = 0;
         const PAGE_SIZE = 10;
 
-        async function loadApps() {
+        async function loadApplications() {
+            showSkeleton('applications-list', 3);
             try {
                 const res = await apiFetch('/applications/my?page=' + currentPage + '&size=' + PAGE_SIZE);
                 totalPages = res.totalPages;
                 const apps = res.content;
-                const list = document.getElementById('apps-list');
+                const list = document.getElementById('applications-list');
+
                 if (apps.length === 0) {
-                    list.innerHTML = '<div class="card"><p>No applications yet.</p></div>';
-                    renderPagination();
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><h3>No applications yet</h3><p>Start by browsing available jobs and applying!</p><a href="/index.html" class="btn btn-primary mt-2">Browse Jobs</a></div>';
                     return;
                 }
-                list.innerHTML = apps.map(app => `
-                    <div class="card job-card">
-                        <div class="job-card-top">
+
+                list.innerHTML = apps.map(app => {
+                    let badgeClass = 'badge-primary';
+                    if (app.status === 'APPLIED') badgeClass = 'badge-info';
+                    else if (app.status === 'REVIEWING') badgeClass = 'badge-warning';
+                    else if (app.status === 'INTERVIEWED') badgeClass = 'badge-primary';
+                    else if (app.status === 'OFFERED') badgeClass = 'badge-success';
+                    else if (app.status === 'REJECTED') badgeClass = 'badge-danger';
+
+                    return `
+                    <div class="card">
+                        <div class="flex-between">
                             <div>
                                 <h3>${app.jobTitle || 'Job #' + app.jobId}</h3>
-                                <div class="meta mt-1">Applied: ${new Date(app.appliedAt).toLocaleDateString()}</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.4rem">
+                                    <span class="badge ${badgeClass}">${app.status}</span>
+                                    <span style="font-size:0.84rem;color:var(--text-muted)">Applied ${formatDate(app.appliedAt)}</span>
+                                </div>
                             </div>
-                            <div class="flex-col" style="align-items:flex-end">
-                                <span class="badge badge-${app.status.toLowerCase()}">${app.status}</span>
-                                ${app.status === 'APPLIED' ? `<button onclick="withdraw(${app.id})" class="btn btn-sm btn-danger mt-1">Withdraw</button>` : ''}
-                            </div>
+                            <a href="/job-detail.html?id=${app.jobId}" class="btn btn-outline btn-sm">View Job</a>
                         </div>
-                    </div>
-                `).join('');
+                        ${app.coverLetter ? '<hr class="section-divider"><p style="font-size:0.88rem;color:var(--text-secondary)"><em>"' + app.coverLetter.substring(0, 200) + (app.coverLetter.length > 200 ? '..."' : '"') + '</em></p>' : ''}
+                    </div>`;
+                }).join('');
                 renderPagination();
-            } catch (e) {
-                showAlert(e.message);
-            }
+            } catch (e) { showAlert(e.message); }
         }
 
         function renderPagination() {
             const container = document.getElementById('pagination');
             if (totalPages <= 1) { container.innerHTML = ''; return; }
             let html = '<div class="pagination">';
-            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage === 0 ? 'disabled' : '') + '>Previous</button>';
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage === 0 ? 'disabled' : '') + '>‹ Prev</button>';
             for (let i = 0; i < totalPages; i++) {
                 html += '<button class="btn btn-sm ' + (i === currentPage ? 'btn-primary' : 'btn-outline') + '" onclick="goToPage(' + i + ')">' + (i + 1) + '</button>';
             }
-            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages - 1 ? 'disabled' : '') + '>Next</button>';
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages - 1 ? 'disabled' : '') + '>Next ›</button>';
             html += '</div>';
             container.innerHTML = html;
         }
@@ -73,21 +78,11 @@
         function goToPage(page) {
             if (page < 0 || page >= totalPages) return;
             currentPage = page;
-            loadApps();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadApplications();
         }
 
-        async function withdraw(id) {
-            if (!confirm('Withdraw this application?')) return;
-            try {
-                await apiFetch('/applications/' + id, { method: 'DELETE' });
-                showAlert('Application withdrawn', 'success');
-                loadApps();
-            } catch (e) {
-                showAlert(e.message);
-            }
-        }
-
-        loadApps();
+        loadApplications();
     </script>
 </body>
 </html>

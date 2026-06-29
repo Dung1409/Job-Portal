@@ -3,44 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - JobPortal</title>
+    <title>Create Account — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
-    <div class="container">
+    <div class="container-narrow">
+        <div id="alert"></div>
         <div class="form-card">
-            <div class="card">
-                <h2 class="text-center mb-2">Create Account</h2>
-                <p class="text-center mb-2" style="color:var(--text-secondary);font-size:0.9rem">Join JobPortal today</p>
-                <div id="alert"></div>
-                <form id="register-form">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="fullName" placeholder="John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" placeholder="your@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="password" placeholder="Min. 8 characters" required>
-                    </div>
-                    <div class="form-group">
-                        <label>I am a</label>
-                        <select id="role">
-                            <option value="APPLICANT">Job Candidate</option>
-                            <option value="RECRUITER">Recruiter / Employer</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
-                    <p class="text-center mt-2" style="font-size:0.88rem;color:var(--text-secondary)">
-                        Already have an account? <a href="/login.html">Sign in</a>
-                    </p>
-                </form>
-            </div>
+            <h2>Create Account</h2>
+            <p class="form-subtitle">Join JobPortal and start your journey</p>
+            <form id="register-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName" placeholder="Nguyen Van A" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="At least 6 characters" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="role" required>
+                        <option value="APPLICANT">Applicant — I want to find a job</option>
+                        <option value="RECRUITER">Recruiter — I want to hire</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
+                <p class="text-center mt-2" style="font-size:0.85rem;color:var(--text-secondary)">
+                    Already have an account? <a href="/login.html">Sign in</a>
+                </p>
+            </form>
         </div>
     </div>
 
@@ -49,7 +47,7 @@
         document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             try {
-                const data = await apiFetch('/auth/register', {
+                await apiFetch('/auth/register', {
                     method: 'POST',
                     body: JSON.stringify({
                         fullName: document.getElementById('fullName').value,
@@ -58,10 +56,8 @@
                         role: document.getElementById('role').value
                     })
                 });
-                localStorage.setItem('token', data.accessToken);
-                localStorage.setItem('refreshToken', data.refreshToken);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = '/index.html';
+                showToast('Account created! Please sign in.', 'success');
+                setTimeout(() => window.location.href = '/login.html', 1000);
             } catch (e) {
                 showAlert(e.message);
             }

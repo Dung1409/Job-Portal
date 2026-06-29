@@ -3,108 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My CVs - JobPortal</title>
+    <title>My CVs — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <h2 class="page-title">My CVs</h2>
         <div id="alert"></div>
+        <h2 class="page-title">📄 My CVs</h2>
 
-        <div class="card mb-2">
-            <h4 style="margin-bottom:0.5rem">Upload New CV</h4>
-            <form id="upload-form">
-                <div class="upload-zone" onclick="document.getElementById('cvFile').click()">
-                    <div class="upload-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                    </div>
-                    <p class="upload-text">Click to upload a PDF file</p>
+        <div class="card mb-3" style="max-width:500px">
+            <h3 class="mb-1">Upload New CV</h3>
+            <form id="cv-form">
+                <div class="form-group">
+                    <input type="file" id="cvFile" accept=".pdf,.doc,.docx,application/pdf" required>
+                    <span class="field-hint">PDF format, max 10MB</span>
                 </div>
-                <input type="file" id="cvFile" accept=".pdf,application/pdf" required style="display:none">
-                <button type="submit" class="btn btn-success btn-lg btn-block mt-2">Upload CV</button>
+                <button type="submit" class="btn btn-primary">Upload CV</button>
             </form>
         </div>
 
+        <h3 class="page-title-sm">Saved CVs</h3>
         <div id="cvs-list"></div>
     </div>
 
     <script src="/js/app.js"></script>
     <script>
-        if (!isLoggedIn()) {
-            window.location.href = '/login.html';
-        }
-
-        const uploadForm = document.getElementById('upload-form');
-        uploadForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const fileInput = document.getElementById('cvFile');
-            if (!fileInput.files || !fileInput.files[0]) return;
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            try {
-                await apiUpload('/cvs/upload', formData);
-                showAlert('CV uploaded!', 'success');
-                fileInput.value = '';
-                loadCvs();
-            } catch (e) {
-                showAlert(e.message);
-            }
-        });
-
         async function loadCvs() {
             try {
                 const cvs = await apiFetch('/cvs');
                 const list = document.getElementById('cvs-list');
+
                 if (!cvs || cvs.length === 0) {
-                    list.innerHTML = '<div class="card"><p>No CVs uploaded yet.</p></div>';
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div><h3>No CVs uploaded yet</h3><p>Upload your first CV above to apply for jobs quickly.</p></div>';
                     return;
                 }
+
                 list.innerHTML = cvs.map(cv => `
-                    <div class="card job-card" id="cv-${cv.id}">
-                        <div class="job-card-top">
+                    <div class="card">
+                        <div class="flex-between">
                             <div>
-                                <div class="flex" style="gap:0.5rem">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                        <line x1="16" y1="17" x2="8" y2="17"/>
-                                    </svg>
-                                    <div>
-                                        <strong>${cv.originalFilename}</strong>
-                                        <div class="meta">${cv.fileSize ? (cv.fileSize / 1024).toFixed(1) + ' KB' : ''}${cv.fileSize ? ' &middot; ' : ''}${new Date(cv.uploadedAt).toLocaleDateString()}</div>
-                                    </div>
+                                <h3>${cv.originalFilename}</h3>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.3rem">
+                                    <span style="font-size:0.84rem;color:var(--text-muted)">📅 Uploaded ${formatDate(cv.uploadedAt)}</span>
+                                    ${cv.fileSize ? '<span style="font-size:0.84rem;color:var(--text-muted)">📦 ' + (cv.fileSize / 1024).toFixed(0) + ' KB</span>' : ''}
                                 </div>
                             </div>
-                            <div class="flex">
-                                <a href="/api/v1/files/cv/${cv.id}" target="_blank" class="btn btn-sm btn-outline">View</a>
-                                <button onclick="deleteCv(${cv.id})" class="btn btn-sm btn-danger">Delete</button>
+                            <div class="flex gap-1">
+                                <a href="/api/v1/files/cv/${cv.id}" class="btn btn-outline btn-sm" target="_blank">Download</a>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCv(${cv.id})">Delete</button>
                             </div>
                         </div>
                     </div>
                 `).join('');
-            } catch (e) {
-                showAlert(e.message);
-            }
+            } catch (e) { showAlert(e.message); }
         }
 
         async function deleteCv(id) {
             if (!confirm('Delete this CV?')) return;
             try {
-                await apiFetch('/cvs/' + id, { method: 'DELETE' });
-                document.getElementById('cv-' + id).remove();
-                showAlert('CV deleted', 'success');
-            } catch (e) {
-                showAlert(e.message);
-            }
+                await apiDelete('/cvs/' + id);
+                showToast('CV deleted', 'success');
+                loadCvs();
+            } catch (e) { showAlert(e.message); }
         }
+
+        document.getElementById('cv-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const file = document.getElementById('cvFile').files[0];
+            if (!file) return showAlert('Please select a file');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                await apiUpload('/cvs', fd);
+                showToast('CV uploaded successfully!', 'success');
+                document.getElementById('cvFile').value = '';
+                loadCvs();
+            } catch (e) { showAlert(e.message); }
+        });
 
         loadCvs();
     </script>
