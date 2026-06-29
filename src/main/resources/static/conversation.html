@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation — JobPortal</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+    <nav class="navbar" id="navbar"></nav>
+
+    <div class="container">
+        <a href="/messages.html" class="back-link">← Back to Messages</a>
+
+        <div id="conversation-header" class="mb-2"></div>
+
+        <div id="message-list" class="message-list"></div>
+
+        <form id="message-form" class="message-form" onsubmit="sendMessage(event)">
+            <input type="text" id="message-input" placeholder="Type a message..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        if (!isLoggedIn()) { window.location.href = '/login.html'; }
+
+        const params = new URLSearchParams(window.location.search);
+        const otherUserId = params.get('userId');
+        if (!otherUserId) { window.location.href = '/messages.html'; }
+
+        let otherUser = null;
+
+        function appendMessage(msg) {
+            const list = document.getElementById('message-list');
+            const empty = list.querySelector('.empty-state');
+            if (empty) list.innerHTML = '';
+            const sent = msg.senderId == getUserId();
+            const div = document.createElement('div');
+            div.className = 'message ' + (sent ? 'message-sent' : 'message-received');
+            div.innerHTML = '<div class="message-bubble"><div class="message-text">' + escapeHtml(msg.content) + '</div><div class="message-time">' + formatTime(msg.createdAt) + (sent ? ' · Read' : '') + '</div></div>';
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        window.onNewMessage = function(msg) {
+            if (msg.senderId == otherUserId || msg.receiverId == otherUserId) {
+                appendMessage(msg);
+                markAsRead();
+            }
+        };
+
+        async function loadConversation() {
+            try {
+                const res = await apiFetch('/messages?userId=' + otherUserId + '&page=0&size=50');
+                const messages = res.content;
+                const header = document.getElementById('conversation-header');
+
+                if (messages.length > 0) {
+                    const first = messages[0];
+                    const isReceiver = first.receiverId == otherUserId;
+                    otherUser = {
+                        id: first.receiverId,
+                        name: isReceiver ? first.receiverName : first.senderName,
+                        email: isReceiver ? first.receiverEmail : first.senderEmail
+                    };
+                } else {
+                    try {
+                        const users = await apiFetch('/messages/conversations');
+                        const found = users.find(u => u.userId == otherUserId);
+                        if (found) {
+                            otherUser = { id: found.userId, name: found.fullName, email: found.email };
+                        }
+                    } catch {}
+                }
+
+                if (otherUser) {
+                    header.innerHTML = '<h2 class="page-title-sm" style="margin-bottom:0">' + otherUser.name + '</h2><div class="meta">' + otherUser.email + '</div>';
+                }
+
+                const list = document.getElementById('message-list');
+                if (messages.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><h3>No messages yet</h3><p>Send a message to start the conversation.</p></div>';
+                } else {
+                    list.innerHTML = messages.slice().reverse().map(msg => {
+                        const sent = msg.senderId == getUserId();
+                        return '<div class="message ' + (sent ? 'message-sent' : 'message-received') + '"><div class="message-bubble"><div class="message-text">' + escapeHtml(msg.content) + '</div><div class="message-time">' + formatTime(msg.createdAt) + (sent ? (msg.isRead ? ' · Read' : ' · Sent') : '') + '</div></div></div>';
+                    }).join('');
+                    list.scrollTop = list.scrollHeight;
+                }
+
+                await markAsRead();
+            } catch (e) {
+                document.getElementById('message-list').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p>' + e.message + '</p></div>';
+            }
+        }
+
+        async function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            input.disabled = true;
+            try {
+                const msg = await apiPost('/messages', {
+                    receiverId: parseInt(otherUserId),
+                    content: content
+                });
+
+                appendMessage(msg);
+                input.value = '';
+            } catch (e) {
+                showToast(e.message, 'error');
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        async function markAsRead() {
+            try {
+                await apiFetch('/messages/read/' + otherUserId, { method: 'PATCH' });
+                updateUnreadBadge();
+            } catch {}
+        }
+
+        function getUserId() {
+            const u = getUser();
+            return u ? u.id : null;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        loadConversation();
+    </script>
+</body>
+</html>

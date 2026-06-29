@@ -53,6 +53,10 @@
                         ${job.benefits ? '<hr class="section-divider"><h4>🎁 Benefits</h4><p style="white-space:pre-wrap">' + job.benefits + '</p>' : ''}
                         ${user && user.role === 'APPLICANT' ? `
                             <hr class="section-divider">
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
+                                <button class="btn btn-outline" onclick="contactRecruiter(${job.companyId})">💬 Contact Recruiter</button>
+                            </div>
+                            <hr class="section-divider">
                             <div id="apply-section">
                                 <h4>🚀 Apply for this job</h4>
                                 <form id="apply-form" enctype="multipart/form-data">
@@ -132,6 +136,15 @@
             } catch (e) {
                 showAlert(e.message);
                 document.getElementById('job-detail').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Failed to load job</h3><p>' + e.message + '</p></div>';
+            }
+        }
+
+        async function contactRecruiter(companyId) {
+            try {
+                const company = await apiFetch('/companies/' + companyId);
+                window.location.href = '/conversation.html?userId=' + company.recruiterId;
+            } catch (e) {
+                showAlert('Could not find recruiter info');
             }
         }
 

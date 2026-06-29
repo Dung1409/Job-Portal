@@ -78,6 +78,8 @@
                         </div>
                         ${app.coverLetter ? '<hr class="section-divider"><p style="font-size:0.88rem;color:var(--text-secondary);white-space:pre-wrap"><em>' + app.coverLetter + '</em></p>' : ''}
                         ${app.resumeUrl ? '<hr class="section-divider"><a href="/api/v1/files/cv/' + app.applicantId + '" class="btn btn-outline btn-sm" target="_blank">📄 View Resume</a>' : ''}
+                        ${!app.resumeUrl ? '<hr class="section-divider">' : ''}
+                        <a href="/conversation.html?userId=${app.applicantId}" class="btn btn-outline btn-sm">💬 Message</a>
                     </div>`;
                 }).join('');
                 renderPagination();

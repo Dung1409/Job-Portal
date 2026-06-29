@@ -129,6 +129,7 @@ function showNavbar() {
             <button class="nav-toggle" onclick="toggleNav()">☰</button>
             <div class="nav-links" id="nav-links">
                 <a href="/index.html" onclick="closeNav()">Jobs</a>
+                <a href="/messages.html" onclick="closeNav()">Messages<span class="unread-badge" id="unread-badge"></span></a>
                 ${isRecruiter ? '<a href="/my-jobs.html" onclick="closeNav()">My Jobs</a><a href="/post-job.html" onclick="closeNav()">Post Job</a><a href="/my-company.html" onclick="closeNav()">Company</a>' : ''}
                 ${isApplicant ? '<a href="/my-cvs.html" onclick="closeNav()">My CVs</a><a href="/my-applications.html" onclick="closeNav()">Applications</a>' : ''}
                 <span class="nav-user">${user.fullName || user.fullname || user.email}</span>
@@ -173,4 +174,53 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-document.addEventListener('DOMContentLoaded', showNavbar);
+async function updateUnreadBadge() {
+    const badge = document.getElementById('unread-badge');
+    if (!badge) return;
+    if (!isLoggedIn()) { badge.textContent = ''; return; }
+    try {
+        const count = await apiFetch('/messages/unread-count');
+        badge.textContent = count > 0 ? count : '';
+    } catch { badge.textContent = ''; }
+}
+
+/* ── STOMP / WebSocket ── */
+let stompClient = null;
+let stompConnected = false;
+
+function stompConnect() {
+    if (stompConnected || !isLoggedIn() || typeof SockJS === 'undefined') return;
+    const token = getToken();
+    if (!token) return;
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({ 'Authorization': 'Bearer ' + token }, () => {
+        stompConnected = true;
+        stompClient.subscribe('/user/queue/messages', (msg) => {
+            try {
+                const body = JSON.parse(msg.body);
+                if (body === 'mark-read') { updateUnreadBadge(); return; }
+                if (body && body.senderId && window.onNewMessage) {
+                    window.onNewMessage(body);
+                }
+                updateUnreadBadge();
+            } catch {}
+        });
+    }, () => { stompConnected = false; });
+}
+
+function stompDisconnect() {
+    if (stompClient && stompConnected) {
+        stompClient.disconnect(() => { stompConnected = false; });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    showNavbar();
+    if (isLoggedIn()) {
+        updateUnreadBadge();
+        if (typeof SockJS !== 'undefined') {
+            setTimeout(stompConnect, 1000);
+        }
+    }
+});
