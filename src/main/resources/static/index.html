@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobPortal</title>
+    <title>JobPortal — Find Your Dream Job</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,8 +14,43 @@
             <h1>Find Your Dream Job</h1>
             <p>Browse opportunities from top companies and take the next step in your career.</p>
         </div>
+
         <div id="alert"></div>
-        <h2 class="page-title">Job Listings</h2>
+
+        <div class="search-bar" id="search-bar">
+            <input class="search-input" type="text" id="searchKeyword" placeholder="Search by title, keyword..." oninput="onSearchChange()">
+            <select id="searchLocation" onchange="onSearchChange()">
+                <option value="">All Locations</option>
+                <option value="Hà Nội">Hà Nội</option>
+                <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                <option value="Đà Nẵng">Đà Nẵng</option>
+            </select>
+            <select id="searchType" onchange="onSearchChange()">
+                <option value="">All Types</option>
+                <option value="FULL_TIME">Full Time</option>
+                <option value="PART_TIME">Part Time</option>
+                <option value="REMOTE">Remote</option>
+                <option value="CONTRACT">Contract</option>
+                <option value="INTERNSHIP">Internship</option>
+            </select>
+            <select id="searchExperience" onchange="onSearchChange()">
+                <option value="">All Levels</option>
+                <option value="ENTRY">Entry</option>
+                <option value="ONE_TWO_YEARS">1-2 Years</option>
+                <option value="THREE_FIVE_YEARS">3-5 Years</option>
+                <option value="FIVE_PLUS">5+ Years</option>
+                <option value="LEAD">Lead</option>
+            </select>
+            <select id="searchCategory" onchange="onSearchChange()">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+
+        <div class="flex-between mb-2">
+            <h2 class="page-title" style="margin-bottom:0">Job Listings</h2>
+            <span style="font-size:0.85rem;color:var(--text-muted)" id="result-count"></span>
+        </div>
+
         <div id="job-list"></div>
         <div id="pagination" class="mt-3"></div>
     </div>
@@ -25,38 +60,90 @@
         let currentPage = 0;
         let totalPages = 0;
         const PAGE_SIZE = 10;
+        let searchTimeout;
+
+        async function loadCategories() {
+            try {
+                const cats = await apiFetch('/categories');
+                const sel = document.getElementById('searchCategory');
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            } catch {}
+        }
+
+        function onSearchChange() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 0;
+                loadJobs();
+            }, 300);
+        }
+
+        function buildSearchParams() {
+            const kw = document.getElementById('searchKeyword').value.trim();
+            const loc = document.getElementById('searchLocation').value;
+            const type = document.getElementById('searchType').value;
+            const exp = document.getElementById('searchExperience').value;
+            const cat = document.getElementById('searchCategory').value;
+            const params = new URLSearchParams();
+            params.set('page', currentPage);
+            params.set('size', PAGE_SIZE);
+            if (kw) params.set('keyword', kw);
+            if (loc) params.set('location', loc);
+            if (type) params.set('jobType', type);
+            if (exp) params.set('experience', exp);
+            if (cat) params.set('categoryId', cat);
+            return params.toString();
+        }
 
         async function loadJobs() {
+            showSkeleton('job-list', 3);
+            document.getElementById('result-count').textContent = '';
+
             try {
-                const res = await apiFetch('/jobs?page=' + currentPage + '&size=' + PAGE_SIZE);
+                const params = buildSearchParams();
+                const res = await apiFetch('/jobs?' + params);
                 totalPages = res.totalPages;
                 const jobs = res.content;
                 const list = document.getElementById('job-list');
 
+                document.getElementById('result-count').textContent = res.totalElements + ' job' + (res.totalElements !== 1 ? 's' : '') + ' found';
+
                 if (jobs.length === 0) {
-                    list.innerHTML = '<div class="card empty-state"><p>No jobs found.</p></div>';
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No jobs found</h3><p>Try adjusting your search or filter criteria.</p></div>';
                     renderPagination();
                     return;
                 }
 
-                list.innerHTML = jobs.map(job => `
+                list.innerHTML = jobs.map(job => {
+                    const sym = job.currency === 'USD' ? '$' : (job.currency === 'VND' ? 'VND' : '');
+                    const salaryFmt = formatSalary(job.salaryMin, job.salaryMax, job.currency);
+                    return `
                     <div class="card job-card">
                         <div class="job-card-top">
                             <div>
-                                <h3>${job.title}</h3>
+                                <a href="/job-detail.html?id=${job.id}" style="color:var(--text);text-decoration:none"><h3>${job.title}</h3></a>
                                 <div class="job-info">
-                                    ${job.companyName ? '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>' + job.companyName + '</span>' : ''}
-                                    ${job.location ? '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + job.location + '</span>' : ''}
-                                    ${job.salaryMin ? '<span class="salary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + formatSalary(job.salaryMin, job.salaryMax, job.currency) + '</span>' : ''}
+                                    ${job.companyName ? '<span>📋 ' + job.companyName + '</span>' : ''}
+                                    ${job.location ? '<span>📍 ' + job.location + '</span>' : ''}
+                                    ${salaryFmt ? '<span class="salary">💰 ' + salaryFmt + '</span>' : ''}
+                                    ${job.jobType ? '<span>⏰ ' + job.jobType.replace(/_/g, ' ') + '</span>' : ''}
+                                    ${job.experience ? '<span>🎯 ' + job.experience.replace(/_/g, ' ') + '</span>' : ''}
                                 </div>
                             </div>
-                            <a href="/job-detail.html?id=${job.id}" class="btn btn-primary btn-sm">View Details</a>
+                            <div class="job-card-actions">
+                                <a href="/job-detail.html?id=${job.id}" class="btn btn-primary btn-sm">View Details</a>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
                 renderPagination();
             } catch (e) {
-                showAlert(e.message);
+                document.getElementById('job-list').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p>' + e.message + '</p></div>';
             }
         }
 
@@ -67,32 +154,23 @@
                 return;
             }
             let html = '<div class="pagination">';
-            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>Previous</button>`;
+            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>‹ Prev</button>`;
             for (let i = 0; i < totalPages; i++) {
                 html += `<button class="btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline'}" onclick="goToPage(${i})">${i + 1}</button>`;
             }
-            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>Next</button>`;
+            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>Next ›</button>`;
             html += '</div>';
             container.innerHTML = html;
-        }
-
-        function formatSalary(min, max, currency) {
-            const fmt = (v) => {
-                if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
-                if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
-                return v;
-            };
-            const sym = currency === 'USD' ? '$' : (currency === 'VND' ? '₫' : '');
-            if (max && max !== min) return sym + fmt(min) + ' - ' + sym + fmt(max);
-            return sym + fmt(min);
         }
 
         function goToPage(page) {
             if (page < 0 || page >= totalPages) return;
             currentPage = page;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             loadJobs();
         }
 
+        loadCategories();
         loadJobs();
     </script>
 </body>

@@ -3,106 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Job - JobPortal</title>
+    <title>Post a Job — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <a href="/my-jobs.html" class="back-link">&larr; Back to My Jobs</a>
-        <div class="form-card" style="max-width:600px">
-            <div class="card">
-                <h2 class="mb-2">Post a New Job</h2>
-                <div id="alert"></div>
-                <form id="job-form">
-                    <div class="form-group">
-                        <label>Job Title</label>
-                        <input type="text" id="title" placeholder="e.g. Senior Software Engineer" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="description" placeholder="Describe the role, responsibilities..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Requirements</label>
-                        <textarea id="requirements" placeholder="- Skill 1&#10;- Skill 2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Benefits</label>
-                        <textarea id="benefits" placeholder="- Benefit 1&#10;- Benefit 2"></textarea>
-                    </div>
-                    <div class="form-group">
+        <a href="/my-jobs.html" class="back-link">← Back to My Jobs</a>
+        <div id="alert"></div>
+        <div class="card" style="max-width:720px">
+            <h2 class="mb-2">📌 Post a New Job</h2>
+            <form id="job-form">
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="title" placeholder="e.g. Senior Java Developer" required>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="description" rows="6" placeholder="Describe the role and responsibilities..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Requirements</label>
+                    <textarea id="requirements" rows="4" placeholder="List the qualifications and skills needed..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Benefits</label>
+                    <textarea id="benefits" rows="4" placeholder="Describe the benefits and perks..."></textarea>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <div class="form-group flex-1" style="min-width:200px">
                         <label>Location</label>
-                        <input type="text" id="location" placeholder="e.g. New York, NY">
+                        <input type="text" id="location" placeholder="e.g. Hà Nội">
                     </div>
-                    <div class="form-group">
-                        <label>Salary Min</label>
-                        <input type="number" id="salaryMin" step="0.01" placeholder="e.g. 50000">
-                    </div>
-                    <div class="form-group">
-                        <label>Salary Max</label>
-                        <input type="number" id="salaryMax" step="0.01" placeholder="e.g. 120000">
-                    </div>
-                    <div class="form-group">
+                    <div class="form-group flex-1" style="min-width:140px">
                         <label>Job Type</label>
                         <select id="jobType">
-                            <option value="">-- Select --</option>
                             <option value="FULL_TIME">Full Time</option>
                             <option value="PART_TIME">Part Time</option>
+                            <option value="REMOTE">Remote</option>
                             <option value="CONTRACT">Contract</option>
                             <option value="INTERNSHIP">Internship</option>
-                            <option value="REMOTE">Remote</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">Post Job</button>
-                </form>
-            </div>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <div class="form-group flex-1" style="min-width:140px">
+                        <label>Experience Level</label>
+                        <select id="experience">
+                            <option value="ENTRY">Entry</option>
+                            <option value="ONE_TWO_YEARS">1-2 Years</option>
+                            <option value="THREE_FIVE_YEARS">3-5 Years</option>
+                            <option value="FIVE_PLUS">5+ Years</option>
+                            <option value="LEAD">Lead</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1" style="min-width:140px">
+                        <label>Category</label>
+                        <select id="categoryId">
+                            <option value="">Select category</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <div class="form-group flex-1" style="min-width:140px">
+                        <label>Salary Min</label>
+                        <input type="number" id="salaryMin" placeholder="e.g. 15000000">
+                    </div>
+                    <div class="form-group flex-1" style="min-width:140px">
+                        <label>Salary Max</label>
+                        <input type="number" id="salaryMax" placeholder="e.g. 30000000">
+                    </div>
+                    <div class="form-group" style="min-width:100px">
+                        <label>Currency</label>
+                        <select id="currency">
+                            <option value="VND">VND</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Application Deadline</label>
+                    <input type="date" id="deadline">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Post Job</button>
+            </form>
         </div>
     </div>
 
     <script src="/js/app.js"></script>
     <script>
-        if (!isLoggedIn()) {
-            window.location.href = '/login.html';
-        }
-
-        (async function() {
+        async function loadCategories() {
             try {
-                await apiFetch('/companies/me');
-            } catch (e) {
-                document.querySelector('.form-card').innerHTML = `
-                    <div class="card empty-state">
-                        <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-                        <p>You need to <a href="/my-company.html">create a company</a> before posting jobs.</p>
-                        <a href="/my-company.html" class="btn btn-primary mt-1">Create Company</a>
-                    </div>`;
-                return;
-            }
-        })();
+                const cats = await apiFetch('/categories');
+                const sel = document.getElementById('categoryId');
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { showAlert(e.message); }
+        }
 
         document.getElementById('job-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const data = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                requirements: document.getElementById('requirements').value,
+                benefits: document.getElementById('benefits').value,
+                location: document.getElementById('location').value,
+                jobType: document.getElementById('jobType').value,
+                experience: document.getElementById('experience').value,
+                salaryMin: document.getElementById('salaryMin').value || null,
+                salaryMax: document.getElementById('salaryMax').value || null,
+                currency: document.getElementById('currency').value,
+                deadline: document.getElementById('deadline').value || null,
+                categoryId: document.getElementById('categoryId').value || null
+            };
             try {
-                await apiFetch('/jobs', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        title: document.getElementById('title').value,
-                        description: document.getElementById('description').value,
-                        requirements: document.getElementById('requirements').value,
-                        benefits: document.getElementById('benefits').value,
-                        location: document.getElementById('location').value,
-                        salaryMin: document.getElementById('salaryMin').value ? Number(document.getElementById('salaryMin').value) : null,
-                        salaryMax: document.getElementById('salaryMax').value ? Number(document.getElementById('salaryMax').value) : null,
-                        jobType: document.getElementById('jobType').value || null
-                    })
-                });
-                showAlert('Job posted successfully!', 'success');
-                this.reset();
-            } catch (e) {
-                showAlert(e.message);
-            }
+                await apiPost('/jobs', data);
+                showToast('Job posted successfully!', 'success');
+                setTimeout(() => window.location.href = '/my-jobs.html', 1000);
+            } catch (e) { showAlert(e.message); }
         });
+
+        loadCategories();
     </script>
 </body>
 </html>

@@ -3,90 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Jobs - JobPortal</title>
+    <title>My Jobs — JobPortal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="navbar" id="navbar"></nav>
 
     <div class="container">
-        <div class="flex-between mb-2">
-            <h2 class="page-title" style="margin-bottom:0">My Jobs</h2>
-            <a href="/post-job.html" class="btn btn-primary">+ Post a Job</a>
-        </div>
         <div id="alert"></div>
+        <div class="flex-between mb-3">
+            <h2 class="page-title" style="margin-bottom:0">📋 My Jobs</h2>
+            <a href="/post-job.html" class="btn btn-primary">+ Post New Job</a>
+        </div>
         <div id="jobs-list"></div>
         <div id="pagination" class="mt-3"></div>
     </div>
 
     <script src="/js/app.js"></script>
     <script>
-        if (!isLoggedIn()) {
-            window.location.href = '/login.html';
-        }
-
         let currentPage = 0;
         let totalPages = 0;
         const PAGE_SIZE = 10;
 
-        function formatSalary(min, max, currency) {
-            const fmt = (v) => {
-                if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
-                if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
-                return v;
-            };
-            const sym = currency === 'USD' ? '$' : (currency === 'VND' ? '₫' : currency || '');
-            if (max && max !== min) return fmt(min) + ' - ' + fmt(max) + ' ' + sym;
-            return fmt(min) + ' ' + sym;
-        }
-
-        async function loadMyJobs() {
+        async function loadJobs() {
+            showSkeleton('jobs-list', 3);
             try {
                 const res = await apiFetch('/jobs/my?page=' + currentPage + '&size=' + PAGE_SIZE);
                 totalPages = res.totalPages;
                 const jobs = res.content;
                 const list = document.getElementById('jobs-list');
-                if (jobs.length === 0 && currentPage === 0) {
-                    list.innerHTML = '<div class="card empty-state"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div><p>You haven\'t posted any jobs yet.</p><a href="/post-job.html" class="btn btn-primary mt-1">Post a Job</a></div>';
-                    renderPagination();
+
+                if (jobs.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><h3>No jobs posted yet</h3><p>Post your first job to start receiving applications.</p><a href="/post-job.html" class="btn btn-primary mt-2">Post a Job</a></div>';
                     return;
                 }
-                list.innerHTML = jobs.map(job => `
+
+                list.innerHTML = jobs.map(job => {
+                    const statusBadge = job.status === 'OPEN' ? 'badge-success' : 'badge-warning';
+                    const count = job.applicantCount || 0;
+                    return `
                     <div class="card job-card">
-                        <div class="job-card-top">
+                        <div class="flex-between">
                             <div>
                                 <h3>${job.title}</h3>
-                                <div class="job-info">
-                                    ${job.location ? '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + job.location + '</span>' : ''}
-                                    ${job.salaryMin ? '<span class="salary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + formatSalary(job.salaryMin, job.salaryMax, job.currency) + '</span>' : ''}
+                                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.4rem">
+                                    ${job.location ? '<span style="font-size:0.84rem;color:var(--text-secondary)">📍 ' + job.location + '</span>' : ''}
+                                    <span class="badge ${statusBadge}" style="font-size:0.75rem">${job.status}</span>
+                                    ${job.jobType ? '<span class="badge badge-primary">' + job.jobType.replace(/_/g, ' ') + '</span>' : ''}
                                 </div>
                             </div>
-                            <div class="flex">
-                                <span class="badge badge-count">${job.applicantCount} applicant${job.applicantCount !== 1 ? 's' : ''}</span>
-                                <a href="/manage-applications.html?jobId=${job.id}" class="btn btn-primary btn-sm">Manage</a>
+                            <div style="text-align:right;flex-shrink:0">
+                                <div style="font-size:1.5rem;font-weight:700;color:var(--primary)">${count}</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted)">applicant${count !== 1 ? 's' : ''}</div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                        <hr class="section-divider">
+                        <div class="flex gap-1" style="margin-top:0.5rem">
+                            <a href="/manage-applications.html?jobId=${job.id}" class="btn btn-primary btn-sm">Manage Applications</a>
+                            <a href="/job-detail.html?id=${job.id}" class="btn btn-outline btn-sm">View</a>
+                        </div>
+                    </div>`;
+                }).join('');
                 renderPagination();
             } catch (e) {
-                const list = document.getElementById('jobs-list');
-                list.innerHTML = '<div class="card empty-state"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><p>You need to <a href="/my-company.html">create a company</a> before posting jobs.</p><a href="/my-company.html" class="btn btn-primary mt-1">Create Company</a></div>';
+                showAlert(e.message);
             }
         }
 
         function renderPagination() {
             const container = document.getElementById('pagination');
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
             let html = '<div class="pagination">';
-            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>Previous</button>`;
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage === 0 ? 'disabled' : '') + '>‹ Prev</button>';
             for (let i = 0; i < totalPages; i++) {
-                html += `<button class="btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline'}" onclick="goToPage(${i})">${i + 1}</button>`;
+                html += '<button class="btn btn-sm ' + (i === currentPage ? 'btn-primary' : 'btn-outline') + '" onclick="goToPage(' + i + ')">' + (i + 1) + '</button>';
             }
-            html += `<button class="btn btn-outline btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>Next</button>`;
+            html += '<button class="btn btn-outline btn-sm" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages - 1 ? 'disabled' : '') + '>Next ›</button>';
             html += '</div>';
             container.innerHTML = html;
         }
@@ -94,10 +86,11 @@
         function goToPage(page) {
             if (page < 0 || page >= totalPages) return;
             currentPage = page;
-            loadMyJobs();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadJobs();
         }
 
-        loadMyJobs();
+        loadJobs();
     </script>
 </body>
 </html>
