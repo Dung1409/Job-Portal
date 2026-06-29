@@ -27,7 +27,7 @@ public class CvController {
 
     private final CvService cvService;
 
-    @PostMapping("/upload")
+    @PostMapping
     public ResponseEntity<ApiResponse<CvResponse>> upload(
             @AuthenticationPrincipal User user,
             @RequestParam("file") MultipartFile file) {
